@@ -12,6 +12,8 @@ namespace JwtApi.Controllers
 
         private readonly JwtService _jwtService;
 
+        private static List<RefreshToken> refreshTokens = new();
+
         public AuthController(JwtService jwtService)
         {
             _jwtService = jwtService;
@@ -36,7 +38,68 @@ namespace JwtApi.Controllers
 
             var token = _jwtService.GenerateToken(user.Username,user.Role);
 
-            return Ok(new LoginResponse { Token=token});
+            var refreshToken = _jwtService.GenerateRefreshToken();
+
+            refreshTokens.Add(new RefreshToken
+            {
+                Token = refreshToken,
+                Username = request.Username,
+                Role = user.Role,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            });
+
+            return Ok(new LoginResponse { AccessToken=token, RefreshToken= refreshToken });
+        }
+
+        [HttpPost("refresh")]
+        public IActionResult Refresh(RefreshTokenRequest request)
+        {
+            var storedToken = refreshTokens
+                .FirstOrDefault(x => x.Token == request.RefreshToken);
+
+            if (storedToken == null)
+            {
+                return Unauthorized("Invalid refresh token");
+            }
+
+            if (storedToken.IsRevoked)
+            {
+                return Unauthorized("Refresh token has already been used");
+            }
+
+            if (storedToken.ExpiresAt <= DateTime.UtcNow)
+            {
+                return Unauthorized("Refresh token expired");
+            }
+
+            // Generate new access token
+            var newAccessToken =
+                _jwtService.GenerateToken(
+                    storedToken.Username,
+                    storedToken.Role);
+
+            // Revoke OLD refresh token
+            storedToken.IsRevoked = true;
+
+            // Generate NEW refresh token
+            var newRefreshToken =
+                _jwtService.GenerateRefreshToken();
+
+            // Store NEW refresh token
+            refreshTokens.Add(new RefreshToken
+            {
+                Token = newRefreshToken,
+                Username = storedToken.Username,
+                Role = storedToken.Role,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                IsRevoked = false
+            });
+
+            return Ok(new LoginResponse
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
+            });
         }
     }
 }

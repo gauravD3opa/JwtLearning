@@ -2,6 +2,7 @@
 using JwtApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
@@ -10,23 +11,81 @@ namespace ConsoleApp1
     internal class Program
     {
 
-        public static async Task<string> GetToken(HttpClient client, LoginRequest request)
+        static string currRefreshToken = string.Empty;
+
+        public static async Task<LoginResponse> Login(HttpClient client, LoginRequest request)
         {
+            HttpResponseMessage response = await client.PostAsJsonAsync( "/api/Auth/login", request);
 
-            // 1. Send the POST request
-            HttpResponseMessage response = await client.PostAsJsonAsync("/api/Auth/login", request);
-
-            // 2. Ensure the API returned a successful status code (e.g., 200 OK)
             response.EnsureSuccessStatusCode();
 
-            // 3. Read the actual JSON body content as a string
             string responseBody = await response.Content.ReadAsStringAsync();
 
-            // 4. Deserialize the string into your object
             LoginResponse loginResponse = JsonConvert.DeserializeObject<LoginResponse>(responseBody);
 
-            return loginResponse.Token;
+            currRefreshToken=loginResponse.RefreshToken;
+
+            return loginResponse;
         }
+
+        public static async Task<LoginResponse> RefreshAccessToken(
+    HttpClient client,
+    string refreshToken)
+        {
+            var request = new RefreshTokenRequest
+            {
+                RefreshToken = refreshToken
+            };
+
+            HttpResponseMessage response =
+                await client.PostAsJsonAsync(
+                    "/api/Auth/refresh",
+                    request);
+
+            response.EnsureSuccessStatusCode();
+
+            string responseBody =
+                await response.Content.ReadAsStringAsync();
+
+            LoginResponse loginResponse =
+                JsonConvert.DeserializeObject<LoginResponse>(responseBody);
+
+            currRefreshToken=loginResponse.RefreshToken;
+
+            return loginResponse;
+        }
+
+        public static async Task<HttpResponseMessage> GetWithRefresh(
+    HttpClient client,
+    string endpoint,
+    string refreshToken)
+        {
+            HttpResponseMessage response =
+                await client.GetAsync(endpoint);
+
+            if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+            {
+                return response;
+            }
+
+            Console.WriteLine("Access token expired. Refreshing...");
+
+            LoginResponse refreshedResponse =
+                await RefreshAccessToken(client, refreshToken);
+
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    refreshedResponse.AccessToken);
+
+            Console.WriteLine("Access token refreshed.");
+
+            // Retry the original request
+            response = await client.GetAsync(endpoint);
+
+            return response;
+        }
+
         public static async Task Main(string[] args)
         {
 
@@ -42,21 +101,36 @@ namespace ConsoleApp1
 
             try
             {
-                string token = await GetToken(client, loginRequest);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                // get an HttpResponseMessage object
-                HttpResponseMessage response = await client.GetAsync("/api/Test/method2");
+                LoginResponse loginResponse = await Login(client, loginRequest);
 
-                // This will now work perfectly
-                response.EnsureSuccessStatusCode();
+                Console.WriteLine($"Access Token: {loginResponse.AccessToken}");
 
-                // This will now work perfectly
-                string responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Refresh Token: {loginResponse.RefreshToken}");
 
-                Console.WriteLine($"Response from /api/Test/method2: {responseBody}");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
 
+                while (true)
+                {
+                    Console.WriteLine(
+    $"Time: {DateTime.Now:HH:mm:ss}");
 
+                    HttpResponseMessage response =
+                        await GetWithRefresh(
+                            client,
+                            "/api/Test/method2",
+                            currRefreshToken);
+
+                    Console.WriteLine(
+                        $"Status: {(int)response.StatusCode}");
+
+                    string responseBody =
+                        await response.Content.ReadAsStringAsync();
+
+                    Console.WriteLine(responseBody);
+
+                    await Task.Delay(2000);
+                }
             }
             catch (HttpRequestException e)
             {

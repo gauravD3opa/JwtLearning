@@ -1,0 +1,6 @@
+@FakeEntraServer_HostAddress = http://localhost:5258
+
+GET {{FakeEntraServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

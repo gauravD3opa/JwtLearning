@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36623.8 d17.14
+VisualStudioVersion = 17.14.36623.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JwtApi", "JwtApi\JwtApi.csproj", "{F8ACE9BB-47FD-45F6-8D54-593AA39AEF78}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{F7BC6519-6BF1-4FF3-8677-FF9FE29B69DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp2", "ConsoleApp2\ConsoleApp2.csproj", "{967734F7-ACAB-445B-8DE7-76F1582AC5CB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FakeEntraServer", "FakeEntraServer\FakeEntraServer.csproj", "{BABB4105-74AA-419D-8EF2-33DD0127D826}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{F7BC6519-6BF1-4FF3-8677-FF9FE29B69DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7BC6519-6BF1-4FF3-8677-FF9FE29B69DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7BC6519-6BF1-4FF3-8677-FF9FE29B69DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{967734F7-ACAB-445B-8DE7-76F1582AC5CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{967734F7-ACAB-445B-8DE7-76F1582AC5CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{967734F7-ACAB-445B-8DE7-76F1582AC5CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{967734F7-ACAB-445B-8DE7-76F1582AC5CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BABB4105-74AA-419D-8EF2-33DD0127D826}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BABB4105-74AA-419D-8EF2-33DD0127D826}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BABB4105-74AA-419D-8EF2-33DD0127D826}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BABB4105-74AA-419D-8EF2-33DD0127D826}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
